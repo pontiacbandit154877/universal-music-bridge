@@ -49,7 +49,7 @@ def youtube_api(search_query, category):
             album_info = yt.get_album(album_id)
             track_count = album_info.get('trackCount')
             print(track_count)
-            if track_count < 6:
+            if track_count <= 6:
                 print(song)
                 video_id = song['videoId']
                 link = f"https://music.youtube.com/watch?v={video_id}"
