@@ -27,7 +27,7 @@ def youtube_api(search_query, category):
                     "source": "YouTube Music"
                 }
                 clean_data_list.append(clean_dict)
-                print(clean_dict)
+            return(clean_data_list)
 
 
     elif category == "songs":
@@ -48,7 +48,7 @@ def youtube_api(search_query, category):
                     "source": "YouTube Music"
                 }
                 clean_data_list.append(clean_dict)
-                print(clean_dict)
+        return(clean_data_list)
 
 
     elif category == "artists":
@@ -69,7 +69,8 @@ def youtube_api(search_query, category):
                     "source": "YouTube Music"
                 }
                 clean_data_list.append(clean_dict)
-                print(clean_dict)
+        return(clean_data_list)
+
 
     elif category == "singles":
 
@@ -80,6 +81,7 @@ def youtube_api(search_query, category):
             album_info = yt.get_album(album_id)
             track_count = album_info.get('trackCount')
             if track_count <= 6:
+
                 video_id = song['videoId']
                 link = f"https://music.youtube.com/watch?v={video_id}"
                 clean_dict = {
@@ -91,7 +93,7 @@ def youtube_api(search_query, category):
                     "source": "YouTube Music"
                 }
                 clean_data_list.append(clean_dict)
-                print(clean_dict)
+        return(clean_data_list)
 
 
 
@@ -120,15 +122,20 @@ def youtube_api(search_query, category):
                     "source": "YouTube Music"
                 }
                 clean_data_list.append(clean_dict)
-                print(clean_dict)
+        return(clean_data_list)
 print("for song")
-youtube_api("Take on me", 'songs')
+l1 = youtube_api("Take on me", 'songs')
+print(l1)
 print("for album")
-youtube_api("hit me hard and soft", 'albums')
+l2 = youtube_api("hit me hard and soft", 'albums')
+print(l2)
 print("for artist")
-youtube_api("MC Hammer", 'artists')
+l3 = youtube_api("MC Hammer", 'artists')
+print(l3)
 print("for singles")
-youtube_api("Lovely", 'singles')
+l4 = youtube_api("Lovely", 'singles')
+print(l4)
 print("for compilation")
-youtube_api("Essentials of Billy Joel", 'compilations')
+l5 = youtube_api("Essentials of Billy Joel", 'compilations')
+print(l5)
 
