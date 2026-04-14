@@ -4,17 +4,31 @@ from ytmusicapi import YTMusic
 yt = YTMusic()
 
 def youtube_api(search_query, category):
+
+
+    clean_data_list = []
+
+
     if category == "albums":
 
-        search_result = yt.search(search_query, filter=category)
+        search_result = yt.search(search_query, filter=category, limit = 4)
         for album in search_result:
 
-
             if search_query.lower() in album['title'].lower():
-                print(album)
                 browse_id = album['browseId']
-                album_link = f"https://music.youtube.com/browse/{browse_id}"
-                print(album_link)
+                link = f"https://music.youtube.com/browse/{browse_id}"
+
+                clean_dict = {
+                    "type" : "Album",
+                    "title": album['title'],
+                    "artist": album['artists'][0]['name'],
+                    "link": link,
+                    "thumbnail": album['thumbnails'],
+                    "source": "YouTube Music"
+                }
+                clean_data_list.append(clean_dict)
+                print(clean_dict)
+
 
     elif category == "songs":
 
@@ -22,10 +36,19 @@ def youtube_api(search_query, category):
         for song in search_result:
 
             if search_query.lower() in  song['title'].lower():
-                print(song)
+
                 video_id = song['videoId']
                 link = f"https://music.youtube.com/watch?v={video_id}"
-                print(link)
+                clean_dict = {
+                    "type": "Song",
+                    "title": song['title'],
+                    "artist": song['artists'][0]['name'],
+                    "link": link,
+                    "thumbnail": song['thumbnails'],
+                    "source": "YouTube Music"
+                }
+                clean_data_list.append(clean_dict)
+                print(clean_dict)
 
 
     elif category == "artists":
@@ -34,11 +57,19 @@ def youtube_api(search_query, category):
         for artist in search_result:
 
              if search_query.lower() in artist['artist'].lower():
-                print(artist)
                 artist_id = artist['browseId']
 
                 link = f"https://music.youtube.com/channel/{artist_id}"
-                print(link)
+                clean_dict = {
+                    "type": "artist",
+                    "title": artist['artist'],
+                    "artist": artist['artist'],
+                    "link": link,
+                    "thumbnail": artist['thumbnails'],
+                    "source": "YouTube Music"
+                }
+                clean_data_list.append(clean_dict)
+                print(clean_dict)
 
     elif category == "singles":
 
@@ -48,12 +79,20 @@ def youtube_api(search_query, category):
             album_id  = song['album']['id']
             album_info = yt.get_album(album_id)
             track_count = album_info.get('trackCount')
-            print(track_count)
             if track_count <= 6:
-                print(song)
                 video_id = song['videoId']
                 link = f"https://music.youtube.com/watch?v={video_id}"
-                print(link)
+                clean_dict = {
+                    "type": "Song",
+                    "title": song['title'],
+                    "artist": song['artists'][0]['name'],
+                    "link": link,
+                    "thumbnail": song['thumbnails'],
+                    "source": "YouTube Music"
+                }
+                clean_data_list.append(clean_dict)
+                print(clean_dict)
+
 
 
 
@@ -70,10 +109,18 @@ def youtube_api(search_query, category):
             matches_query = search_query.lower() in album['title'].lower() or  search_query.lower() in album['artists'][0]['name'].lower() or album['title'].lower() in search_query.lower() or album['artists'][0]['name'].lower() in search_query.lower()
 
             if is_comp and matches_query:
-                print(album)
                 browse_id = album['browseId']
                 link = f"https://music.youtube.com/browse/{browse_id}"
-                print(link)
+                clean_dict = {
+                    "type": "Compilation",
+                    "title": album['title'],
+                    "artist": album['artists'][0]['name'],
+                    "link": link,
+                    "thumbnail": album['thumbnails'],
+                    "source": "YouTube Music"
+                }
+                clean_data_list.append(clean_dict)
+                print(clean_dict)
 print("for song")
 youtube_api("Take on me", 'songs')
 print("for album")
