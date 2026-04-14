@@ -12,6 +12,8 @@ It took me around two to three hours to figure out how to make the singles categ
 <img width="1599" height="868" alt="Screenshot 2026-04-14 at 12 11 31 AM" src="https://github.com/user-attachments/assets/5768e152-02e4-41d3-8780-ab631021709e" />
 Took about thirty minutes to write code for compilation category. 
 <img width="1582" height="478" alt="Screenshot 2026-04-14 at 12 11 46 AM" src="https://github.com/user-attachments/assets/d6a9d292-64cc-4718-b2e7-a9b2a2038bfd" />
+Took me fifty minutes to clean and parse the returned data into clean_dict and then append that into a clean_data_list that will be return after the for loop has terminated
+<img width="3242" height="1828" alt="image" src="https://github.com/user-attachments/assets/e0563a7f-c357-4bc2-b856-b1d9acb59cc9" />
 
 
 
