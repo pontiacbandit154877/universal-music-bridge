@@ -1,0 +1,17 @@
+from api_modules.youtube_api import youtube_api
+
+print("for song")
+l1 = youtube_api("Take on me", 'songs')
+print(l1)
+print("for album")
+l2 = youtube_api("hit me hard and soft", 'albums')
+print(l2)
+print("for artist")
+l3 = youtube_api("MC Hammer", 'artists')
+print(l3)
+print("for singles")
+l4 = youtube_api("Lovely", 'singles')
+print(l4)
+print("for compilation")
+l5 = youtube_api("Essentials of Billy Joel", 'compilations')
+print(l5)
