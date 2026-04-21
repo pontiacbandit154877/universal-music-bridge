@@ -1,15 +1,20 @@
+import base64
 import os
+
+import requests
 import tidalapi as tidal
 
 from dotenv import load_dotenv, set_key
 from datetime import datetime
+from datetime import timedelta
 
 env_path = '.env'
 load_dotenv(dotenv_path=env_path)
 
 session = tidal.Session()
 
-TOKEN = os.getenv("TIDAL_API_TOKEN")
+TIDAL_API_ID = os.getenv('TIDAL_API_ID')
+TIDAL_API_SECRET = os.getenv('TIDAL_API_SECRET')
 TOKEN_TYPE = os.getenv("TIDAL_SESSION_TOKEN_TYPE")
 ACCESS_TOKEN = os.getenv("TIDAL_SESSION_ACCESS_TOKEN")
 REFRESH_TOKEN = os.getenv("TIDAL_SESSION_REFRESH_TOKEN")
@@ -22,24 +27,55 @@ def save_session_to_env():
     set_key(env_path, "TIDAL_SESSION_EXPIRY_TIME", str(session.expiry_time))
     print("Session Saved!")
 
+
 def load_session_from_env():
-    if TOKEN_TYPE != "":
+    if ACCESS_TOKEN and ACCESS_TOKEN != "None" and EXPIRY_TIME_UNFORMATTED and EXPIRY_TIME_UNFORMATTED != "None":
         try:
-            expiry_time_formatted = datetime.strptime(EXPIRY_TIME_UNFORMATTED, "%Y-%m-%d %H:%M:%S.%f")
-            session.load_oauth_session(TOKEN_TYPE, ACCESS_TOKEN, REFRESH_TOKEN, expiry_time_formatted)
-            return True
+            expiry = datetime.strptime(EXPIRY_TIME_UNFORMATTED, "%Y-%m-%d %H:%M:%S.%f")
+
+            if datetime.now() < expiry:
+                session.access_token = ACCESS_TOKEN
+                session.token_type = TOKEN_TYPE
+                session.request_session.headers.update({"Authorization": f"{TOKEN_TYPE} {ACCESS_TOKEN}"})
+
+                return True
+
         except Exception as e:
-            print(f"Stored session invalid: {e}")
-            session.login_oauth_simple(fn_print=print)
-            save_session_to_env()
-            return False
-    else:
-        session.login_oauth_simple(fn_print=print)
+            print(f"Token reload failed: {e}")
+
+    return create_session()
+
+
+def create_session():
+    auth_str = f"{TIDAL_API_ID}:{TIDAL_API_SECRET}"
+    encoded_auth = base64.b64encode(auth_str.encode()).decode()
+
+    headers = {"Authorization": f"Basic {encoded_auth}"}
+    data = {"grant_type": "client_credentials"}
+
+    response = requests.post("https://auth.tidal.com/v1/oauth2/token", headers=headers, data=data)
+
+    if response.status_code == 200:
+        token_data = response.json()
+
+        session.access_token = token_data['access_token']
+        session.token_type = token_data['token_type']
+
+        session.request.session.headers.update({
+            "Authorization": f"{session.token_type} {session.access_token}"
+        })
+
+        session.expiry_time = datetime.now() + timedelta(seconds=token_data.get('expires_in', 86400))
+
         save_session_to_env()
+        return True
+    else:
+        print(f"Failed to get app token: {response.text}")
         return False
 
 def tidal_init():
     print(f"Login Status: {load_session_from_env()}")
+    session.country_code="US"
 
 def tidal_api(category, query):
     match category:
@@ -55,28 +91,66 @@ def tidal_api(category, query):
             return tidal_search_song(query)
     return None
 
-def tidal_search_album(query):
-    print("Searching Album...")
-    album_dict = session.search(query, models=[tidal.Album], limit=10)
-    album_list = album_dict.get('albums')
+def tidal_search(query, explicitFilter, countryCode, type):
+    query_formatted = query.replace(" ", "%20")
 
-    return album_list
+    headers = {
+        'accept': 'application/vnd.api+json',
+        "Authorization": f"Bearer {session.access_token}"
+    }
+
+    params = {
+        'explicitFilter': explicitFilter,
+        'countryCode': countryCode,
+        'include': type,
+    }
+
+    response = requests.get(
+        f'https://openapi.tidal.com/v2/searchResults/{query_formatted}',
+        params=params,
+        headers=headers,
+    )
+
+    if response.status_code == 200:
+        response_json = response.json()
+        print(response_json)
+        results = response_json["included"]
+        print(results)
+
+        return results
+    else:
+        print(f"Search Failed: {response.status_code} - {response.text}")
+        return []
+
+def tidal_search_album(query):
+    print(f"Searching for album '{query}'")
+
+    results = tidal_search(query, "INCLUDE", 'US', 'albums')
+
+    top_album = max(results, key=lambda x: x['attributes'].get('popularity', 0))
+
+    print(f"Top Result: {top_album['attributes']['title']}")
+    print(f"Score: {top_album['attributes']['popularity']}")
+
+    return results, top_album
+
 
 def tidal_search_single(query):
-    print("Searching Single...")
-    single_dict = session.search(query, models=[tidal.Track], limit=10)
-    single_list = single_dict.get('tracks')
-    return_list = []
+    print(f"Searching for song '{query}'")
+    results = tidal_search(query, "INCLUDE", 'US', 'albums')
 
-    for track in single_list:
-        parent_album = session.album(track.album.id)
+    singles = [
+        alb for alb in results
+        if alb['attributes'].get('albumType') in ['SINGLE']
+    ]
 
-        if getattr(parent_album, 'type', None) == 'SINGLE' or parent_album.num_tracks == 1:
-            return_list.append(parent_album)
+    if singles:
+        top_single = max(singles, key=lambda x: x['attributes'].get('popularity', 0))
+        return singles, top_single
+    else:
+        print("No singles or EPs found in the list.")
 
-    if len(return_list) > 0:
-        return return_list
-    return None
+    return singles, None
 
 def tidal_search_song(query):
     print("Searching Song...")
