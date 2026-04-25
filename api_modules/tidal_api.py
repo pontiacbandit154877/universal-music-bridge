@@ -1,5 +1,6 @@
 import base64
 import os
+from pathlib import Path
 
 import requests
 import tidalapi as tidal
@@ -8,7 +9,8 @@ from dotenv import load_dotenv, set_key
 from datetime import datetime
 from datetime import timedelta
 
-env_path = '.env'
+base_dir = Path(__file__).resolve().parent.parent
+env_path = base_dir / '.env'
 load_dotenv(dotenv_path=env_path)
 
 session = tidal.Session()
@@ -61,7 +63,7 @@ def create_session():
         session.access_token = token_data['access_token']
         session.token_type = token_data['token_type']
 
-        session.request.session.headers.update({
+        session.request_session.headers.update({
             "Authorization": f"{session.token_type} {session.access_token}"
         })
 

@@ -1,5 +1,4 @@
-from tidal_api import tidal_api
-from tidal_api import tidal_init
+from api_modules.tidal_api import tidal_init, tidal_api
 
 tidal_init()
 
