@@ -1,5 +1,6 @@
 import base64
 import os
+import json
 from pathlib import Path
 
 import requests
@@ -83,8 +84,6 @@ def tidal_api(category, query):
     match category:
         case "album":
             return tidal_search_album(query)
-        case "single":
-            return tidal_search_single(query)
         case "artist":
             return tidal_search_artist(query)
         case "compilation":
@@ -113,9 +112,10 @@ def tidal_search(query, explicitFilter, countryCode, type):
         headers=headers,
     )
 
+    print(f"Requesting URL: {response.url}")
+
     if response.status_code == 200:
         response_json = response.json()
-        print(response_json)
         results = response_json["included"]
         print(results)
 
@@ -137,46 +137,53 @@ def tidal_search_album(query):
     return results, top_album
 
 
-def tidal_search_single(query):
-    print(f"Searching for song '{query}'")
-    results = tidal_search(query, "INCLUDE", 'US', 'albums')
-
-    singles = [
-        alb for alb in results
-        if alb['attributes'].get('albumType') in ['SINGLE']
-    ]
-
-    if singles:
-        top_single = max(singles, key=lambda x: x['attributes'].get('popularity', 0))
-        return singles, top_single
-    else:
-        print("No singles or EPs found in the list.")
-
-    return singles, None
-
 def tidal_search_song(query):
-    print("Searching Song...")
-    song_dict = session.search(query, models=[tidal.Track], limit=10)
-    song_list = song_dict.get('tracks')
+    print(f"Searching for song '{query}'")
 
-    return song_list
+    results = tidal_search(query, "INCLUDE", 'US', 'tracks')
+
+    top_song = max(results, key=lambda x: x['attributes'].get('popularity', 0))
+
+    return results, top_song
 
 def tidal_search_artist(query):
-    print("Searching Artist...")
-    artist_dict = session.search(query, models=[tidal.Artist], limit=10)
-    artist_list = artist_dict.get('artists')
-    return artist_list
+    print(f"Searching for artist '{query}'")
+
+    results = tidal_search(query, "INCLUDE", 'US', 'artists')
+
+    top_artist = max(results, key=lambda x: x['attributes'].get('popularity', 0))
+
+    return results, top_artist
 
 def tidal_search_compilation(query):
-    print("Searching Compilation...")
-    compilation_dict = session.search(query, models=[tidal.Album], limit=10)
-    compilation_list = compilation_dict.get('albums')
-    results_list = []
+    print(f"Searching for EPs: '{query}'")
 
-    for album in compilation_list:
+    results = tidal_search(query, "INCLUDE", 'US', 'albums')
 
-        if album.type == 'EP':
-            results_list.append(album)
+    if not results:
+        return [], None
 
-    return results_list
+    valid_eps = []
+
+    for item in results:
+        if item.get('type') in ['albums', 'compilations']:
+            attr = item.get('attributes', {})
+
+            album_type = attr.get('albumType')
+
+            num_tracks = attr.get('numberOfItems', 0)
+
+            if album_type == 'EP' or (3 <= num_tracks <= 6):
+                valid_eps.append(item)
+
+    if not valid_eps:
+        print(f"No EPs found for '{query}'.")
+        return [], None
+
+    top_ep = max(valid_eps, key=lambda x: x['attributes'].get('popularity', 0), default=None)
+
+    return valid_eps, top_ep
+
+
+
 
