@@ -15,5 +15,10 @@ Took about thirty minutes to write code for compilation category.
 Took me fifty minutes to clean and parse the returned data into clean_dict and then append that into a clean_data_list that will be return after the for loop has terminated
 <img width="3242" height="1828" alt="image" src="https://github.com/user-attachments/assets/e0563a7f-c357-4bc2-b856-b1d9acb59cc9" />
 
+It took me three hours to create spotify premium account, create project on spotify developers, understand the cliet configuration flow for spotify api from its documentation and skim through the api documentation.
+
+After that it took me two hours to write code for artist, song, album, single and compilation search categories which return a clean_data_list.
+<img width="1593" height="458" alt="Screenshot 2026-04-24 at 11 42 12 PM" src="https://github.com/user-attachments/assets/baa75816-6b8a-413b-a438-c371a1e7abaa" />
+
 
 
