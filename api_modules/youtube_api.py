@@ -56,7 +56,7 @@ def youtube_api(search_query, category):
         search_result = yt.search(search_query, filter=category, limit = 4)
         for artist in search_result:
 
-             if search_query.lower() in artist['artist'].lower():
+             if artist['artist'].lower() in search_query.lower():
                 artist_id = artist['browseId']
 
                 link = f"https://music.youtube.com/channel/{artist_id}"
@@ -123,4 +123,3 @@ def youtube_api(search_query, category):
                 }
                 clean_data_list.append(clean_dict)
         return(clean_data_list)
-
