@@ -1,11 +1,15 @@
 import json
 from dotenv import load_dotenv
+from pathlib import Path
 import os
 import base64
 from requests import post, get
 
+base_dir = Path(__file__).resolve().parent.parent
+env_path = base_dir / '.env'
 
-load_dotenv()
+load_dotenv(dotenv_path=env_path)
+
 
 client_id = os.getenv("SPOTIFY_CLIENT_ID")
 client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
