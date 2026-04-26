@@ -1,4 +1,6 @@
 import tkinter as tk
+import webbrowser
+from api_modules.youtube_api import youtube_api
 
 window = tk.Tk()
 window.title("Universal Music Bridge")
@@ -124,6 +126,9 @@ def search():
     for widget in results_frame.winfo_children():
         widget.destroy()
 
+    song = song_entry.get()
+    artist = artist_entry.get()
+
     selected = []
 
     if youtube_var.get():
@@ -136,16 +141,47 @@ def search():
     if selected:
         results_label.config(text="Results:")
 
-        for platform in selected:
-            tk.Label(
+
+        if youtube_var.get():
+            youtube_results = youtube_api(song, "songs")
+
+            for result in youtube_results[:4]:
+                tk.Button(
                 results_frame,
-                text=platform + " result will appear here",
+                text=result["title"] + " - " + result["artist"],
                 font=("Segoe UI", 12),
-                width=40,
+                width=45,
+                bg="#caf0f8",
+                fg="#0077b6",
                 relief="groove",
-                bg="#dff6ff", fg="#0077b6",
-                pady=8
+                command=lambda link=result["link"]: webbrowser.open(link)
             ).pack(pady=5)
+
+
+        if spotify_var.get():
+            tk.Label(
+            results_frame,
+            text="Spotify result will appear here",
+            font=("Segoe UI", 12),
+            width=40,
+            relief="groove",
+            bg="#dff6ff",
+            fg="#0077b6",
+            pady=8
+        ).pack(pady=5)
+
+        if tidal_var.get():
+            tk.Label(
+            results_frame,
+            text="Tidal result will appear here",
+            font=("Segoe UI", 12),
+            width=40,
+            relief="groove",
+            bg="#dff6ff",
+            fg="#0077b6",
+            pady=8
+        ).pack(pady=5)
+
     else:
         results_label.config(text="No platform selected")
 
@@ -175,6 +211,7 @@ results_label.pack(pady=10)
 # result container
 results_frame = tk.Frame(window, bg="#dff6ff")
 results_frame.pack(pady=20)
+
 
 
 window.mainloop()
