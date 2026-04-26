@@ -1,6 +1,6 @@
 import base64
 import os
-import json
+import re
 from pathlib import Path
 
 import requests
@@ -91,6 +91,12 @@ def tidal_api(category, query):
         case "songs":
             return tidal_search_song(query)
     return None
+
+def normalize(text):
+    if not text:
+        return ""
+
+    return re.sub(r'[^a-zA-Z0-9]', '', text.lower())
 
 def tidal_search(query, explicitFilter, countryCode, type):
     query_formatted = query.replace(" ", "%20")
@@ -238,28 +244,32 @@ def tidal_search_album(query):
 
     return cleaned_top_album
 
-
 def tidal_search_song(query):
     print(f"Searching for song '{query}'")
-
     results = tidal_search(query, "INCLUDE", 'US', 'tracks')
-
     track_items = [item for item in results if item.get('type') == 'tracks']
 
     if not track_items:
-        print(f"No tracks found for '{query}'.")
         return None
 
-    top_song = max(track_items, key=lambda x: x['attributes'].get('popularity', 0))
+    normalized_query = normalize(query)
+
+    exact_matches = [
+        item for item in track_items
+        if normalized_query in normalize(item['attributes'].get('title', ''))
+    ]
+
+    if exact_matches:
+        top_song = max(exact_matches, key=lambda x: x['attributes'].get('popularity', 0))
+    else:
+        top_song = max(track_items, key=lambda x: x['attributes'].get('popularity', 0))
 
     # Get the track ID and fetch the artist info specifically for this track
     top_song_id = top_song.get('id')
     artist_info = get_artist_info(top_song_id, "tracks")
 
     # Pass the artist_info into clean_result
-    cleaned_top_song = clean_result(top_song, 'song', artist_info)
-
-    return cleaned_top_song
+    return clean_result(top_song, 'song', artist_info)
 
 def tidal_search_artist(query):
     print(f"Searching for artist '{query}'")
