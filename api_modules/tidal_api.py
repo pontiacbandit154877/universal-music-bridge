@@ -250,26 +250,19 @@ def tidal_search_song(query):
     track_items = [item for item in results if item.get('type') == 'tracks']
 
     if not track_items:
-        return None
+        return []
+    # sort all results by popularity to get the best matches
+    track_items = sorted(track_items, key=lambda x: x['attributes'].get('popularity', 0), reverse=True)
+    top_tracks = []
+    # grab the top 4 tracks instead of just 1
+    for track in track_items[:4]:
+        track_id = track.get('id')
+        artist_info = get_artist_info(track_id, "tracks")
+        cleaned = clean_result(track, 'song', artist_info)
 
-    normalized_query = normalize(query)
-
-    exact_matches = [
-        item for item in track_items
-        if normalized_query in normalize(item['attributes'].get('title', ''))
-    ]
-
-    if exact_matches:
-        top_song = max(exact_matches, key=lambda x: x['attributes'].get('popularity', 0))
-    else:
-        top_song = max(track_items, key=lambda x: x['attributes'].get('popularity', 0))
-
-    # Get the track ID and fetch the artist info specifically for this track
-    top_song_id = top_song.get('id')
-    artist_info = get_artist_info(top_song_id, "tracks")
-
-    # Pass the artist_info into clean_result
-    return clean_result(top_song, 'song', artist_info)
+        if cleaned:
+            top_tracks.append(cleaned)
+    return top_tracks
 
 def tidal_search_artist(query):
     print(f"Searching for artist '{query}'")

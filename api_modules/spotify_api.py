@@ -75,26 +75,24 @@ def spotify_search(search_query, category):
                 clean_data_list.append(clean_dict)
         return clean_data_list
 
-    elif category == "songs":
 
+    elif category == "songs":
         query = f"?q={search_query}&type=track&limit=4"
         query_url = url + query
         result = get(query_url, headers=header)
         json_result = json.loads(result.content)['tracks']['items']
-
-
         for song in json_result:
+            clean_dict = {
+                "type": "song",
+                "title": song['name'],
+                "artist": song['artists'][0]['name'],
+                "link": song['external_urls']['spotify'],
+                "thumbnail": song['album']['images'],
+                "source": "Spotify"
+            }
 
-            if  search_query.lower() in  song['name'].lower():
-               clean_dict = {
-                    "type": "song",
-                    "title": song['name'],
-                    "artist": song['artists'][0]['name'],
-                    "link": song['external_urls']['spotify'],
-                    "thumbnail": song['album']['images'],
-                    "source": "Spotify"
-                }
-               clean_data_list.append(clean_dict)
+            clean_data_list.append(clean_dict)
+
         return clean_data_list
 
 

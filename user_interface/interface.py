@@ -264,11 +264,27 @@ def search():
     if apis:
         results_label.config(text="Results:")
 
-        query = song
+        search_types = []
+
+        if song and artist:
+            query = f"{song} {artist}"
+            search_types = ["songs"]
+
+        elif song:
+            query = song
+            search_types = ["songs"]
+
+        elif artist:
+            query = artist
+            search_types = ["artists"]
+
+        else:
+            results_label.config(text="Please enter a song or artist.")
+            return
 
         tidal_results, youtube_results, spotify_results = search_apis(
             query,
-            ["songs"],
+            search_types,
             apis
         )
 
@@ -278,12 +294,15 @@ def search():
             for result in youtube_results[0][:4]:
 
                 if result.get("thumbnail"):
-                    image_url = result["thumbnail"][0]["url"]  # pick the best image
+                    image_url = result["thumbnail"][0]["url"]
                     create_album_art(results_frame, image_url)
+
+                title = result.get("title", "Unknown Title")
+                artist_name = result.get("artist", artist if artist else "Unknown Artist")
 
                 create_result_button(
                     results_frame,
-                    result["title"] + " - " + result["artist"],
+                    f"{title} - {artist_name}",
                     result["link"]
                 )
 
@@ -303,26 +322,28 @@ def search():
                 )
                 print(result)
 
-        if tidal_var.get() and tidal_results and isinstance(tidal_results[0], dict):
+        if tidal_var.get() and tidal_results and tidal_results[0]:
             tk.Label(results_frame, text="Tidal Results:", **RESULT_SECTION_STYLE).pack()
 
-            result = tidal_results[0] if isinstance(tidal_results, list) else tidal_results
+            # Safely handle the data whether it's a list (songs) or single dictionary (artists/albums)
+            results_to_display = tidal_results[0] if isinstance(tidal_results[0], list) else [tidal_results[0]]
 
-            if result.get("thumbnail"):
-                thumbnail = result["thumbnail"]
+            for result in results_to_display[:4]:
+                if result.get("thumbnail"):
+                    thumbnail = result["thumbnail"]
 
-                if isinstance(thumbnail, list):
-                    image_url = thumbnail[0]["url"]
-                else:
-                    image_url = thumbnail
+                    if isinstance(thumbnail, list):
+                        image_url = thumbnail[0]["url"]
+                    else:
+                        image_url = thumbnail
 
-                create_album_art(results_frame, image_url)
+                    create_album_art(results_frame, image_url)
 
-            create_result_button(
-                results_frame,
-                result["title"] + " - " + result.get("artist", "Unknown"),
-                result["link"]
-            )
+                create_result_button(
+                    results_frame,
+                    result["title"] + " - " + result.get("artist", "Unknown"),
+                    result["link"]
+                )
     else:
         results_label.config(text="No platform selected")
 

@@ -28,25 +28,22 @@ def youtube_api(search_query, category):
             return(clean_data_list)
 
 
+
     elif category == "songs":
-
-        search_result = yt.search(search_query, filter=category, limit = 4)
+        search_result = yt.search(search_query, filter=category, limit=4)
         for song in search_result:
-
-            if search_query.lower() in  song['title'].lower():
-
-                video_id = song['videoId']
-                link = f"https://music.youtube.com/watch?v={video_id}"
-                clean_dict = {
-                    "type": "Song",
-                    "title": song['title'],
-                    "artist": song['artists'][0]['name'],
-                    "link": link,
-                    "thumbnail": song['thumbnails'],
-                    "source": "YouTube Music"
-                }
-                clean_data_list.append(clean_dict)
-        return(clean_data_list)
+            video_id = song['videoId']
+            link = f"https://music.youtube.com/watch?v={video_id}"
+            clean_dict = {
+                "type": "Song",
+                "title": song['title'],
+                "artist": song['artists'][0]['name'],
+                "link": link,
+                "thumbnail": song['thumbnails'],
+                "source": "YouTube Music"
+            }
+            clean_data_list.append(clean_dict)
+        return (clean_data_list)
 
 
     elif category == "artists":
