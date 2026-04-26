@@ -208,12 +208,28 @@ tidal_checkbox.pack(side="left", padx=15)
 # search function
 
 def create_result_button(parent, text, link):
+    result_card = tk.Frame(parent, bg=APP_BG)
+    result_card.pack(pady=5)
+
     HoverButton(
-        parent,
+        result_card,
         text=text,
         command=lambda: webbrowser.open(link),
         **RESULT_BUTTON_STYLE
-    ).pack(pady=5)
+    ).pack(side="left", padx=5)
+
+    HoverButton(
+        result_card,
+        text="Copy Link",
+        command=lambda: copy_link(link),
+        **BUTTON_STYLE
+    ).pack(side="left", padx=5)
+
+def copy_link(link):
+    window.clipboard_clear()
+    window.clipboard_append(link)
+    window.update()
+    results_label.config(text="Link copied to clipboard!")
 
 
 def create_album_art(parent, image_url):
