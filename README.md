@@ -20,5 +20,16 @@ It took me three hours to create spotify premium account, create project on spot
 After that it took me two hours to write code for artist, song, album, single and compilation search categories which return a clean_data_list.
 <img width="1593" height="458" alt="Screenshot 2026-04-24 at 11 42 12 PM" src="https://github.com/user-attachments/assets/baa75816-6b8a-413b-a438-c371a1e7abaa" />
 
-
-
+| Kairos | VanDeCar |  |  |
+| ----- | ----- | ----- | :---- |
+| Commit \# | Commit Name | Hours Spent | What was accomplished |
+| 1, 2 | Tidal API Initial Commit, Initial Commit of Tidal API Test Script | 4 | Initial Draft of TIDAL API functionality requiring a user account (not API key) Initial Draft of Tidal API Test File |
+| 3, 4 | 50% Conversion of Tidal API to key,50% Conversion of Tidal Test | 6 | 50% Revision of TIDAL API functionality to convert to API Key (not user account) 50% Revision of Test File for new data structures returned by Tidal API |
+| 5 | Repair functionality for Tidal\_API | 1 | Repair functionality for TIDAL API / Fixed formatting for github environment |
+| 6 | Full Func of TIDAL API | 6 | Full conversion of TIDAL API functionality to API KEY Full conversion of Test File |
+| 7 | Func. Tidal API | 1 | Added functionality to TIDAL API |
+| 8 | API Parity \+ Tidal Cleaning | 6 | Changed output formatting for TIDAL API methods to be in parity with youtube and spotify. Included result cleaning method to achieve this. |
+| 9 | EOD Commit | 1 | End of day commit, added main helper method that allows prompting of as many types and apis as selected.  |
+| 10 | Fixed Popularity overriding name Match | 2 | Fixed TIDAL API prioritizing popularity of tracks over exact name matches. Added helper method to clean query and song title for comparison, and made song search method select most popular name match and most popular if no name match exists. |
+| 11 | Modify Main \+ Add Main Test | 1 | Modify main helper method, and create a main test script to ensure functionality across all API’s. |
+| 12 | Tidal API Thumbnails for Song and Albums | 3 | Add helper methods for determining thumbnail using album id. Incorporated into albums automatically, and added functionality so song search determines its parent album and finds thumbnail through that. |
