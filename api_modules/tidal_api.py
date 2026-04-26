@@ -125,20 +125,21 @@ def tidal_search(query, explicitFilter, countryCode, type):
         return []
 
 
-def get_artist_info(album_id):
+def get_artist_info(item_id, item_type="albums"):
     headers = {
         'accept': 'application/vnd.api+json',
         "Authorization": f"Bearer {session.access_token}"
     }
     params = {'include': 'artists', 'countryCode': 'US'}
 
-    url = f'https://openapi.tidal.com/v2/albums/{album_id}/relationships/artists'
+    # dynamically inject 'albums' or 'tracks' into the URL
+    url = f'https://openapi.tidal.com/v2/{item_type}/{item_id}/relationships/artists'
     response = requests.get(url, params=params, headers=headers)
 
     artist_info = {"name": "Unknown Artist", "link": "No Link Available"}
 
     if response.status_code == 200:
-        print("Artist lookup succeeded.")
+        print(f"Artist lookup for {item_type} succeeded.")
         res_json = response.json()
         included = res_json.get("included", [])
 
@@ -153,14 +154,14 @@ def get_artist_info(album_id):
                     artist_info["link"] = links[0].get('href')
                 return artist_info
 
-    print("Artist lookup failed.")
-
+    print(f"Artist lookup for {item_type} failed.")
     return artist_info
 
 
 def clean_result(item, type, artist_info=None):
     # Accepted parameters for type are: 'album', 'song', 'artist', 'compilation'
     attr = item.get('attributes', {})
+    item_id = item.get('id')
 
     artist_name = "Unknown Artist"
     artist_link = "No Link Available"
@@ -169,8 +170,15 @@ def clean_result(item, type, artist_info=None):
         artist_name = artist_info.get("name", "Unknown Artist")
         artist_link = artist_info.get("link", "No Link Available")
 
-    links = attr.get('externalLinks', [])
-    link = links[0].get('href') if links else "No Link Available"
+    # tidal url structure
+    if type == 'song':
+        link = f"https://tidal.com/track/{item_id}"
+    elif type in ['album', 'compilation']:
+        link = f"https://tidal.com/album/{item_id}"
+    elif type == 'artist':
+        link = f"https://tidal.com/artist/{item_id}"
+    else:
+        link = "No Link Available"
 
     images = attr.get('imageLinks', [])
     thumbnail = images[0].get('href') if images else None
@@ -214,7 +222,6 @@ def clean_result(item, type, artist_info=None):
 
     return None
 
-
 def tidal_search_album(query):
     print(f"Searching for album '{query}'")
 
@@ -245,7 +252,12 @@ def tidal_search_song(query):
 
     top_song = max(track_items, key=lambda x: x['attributes'].get('popularity', 0))
 
-    cleaned_top_song = clean_result(top_song, 'song')
+    # Get the track ID and fetch the artist info specifically for this track
+    top_song_id = top_song.get('id')
+    artist_info = get_artist_info(top_song_id, "tracks")
+
+    # Pass the artist_info into clean_result
+    cleaned_top_song = clean_result(top_song, 'song', artist_info)
 
     return cleaned_top_song
 
