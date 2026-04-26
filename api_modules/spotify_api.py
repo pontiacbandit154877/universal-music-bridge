@@ -172,7 +172,3 @@ def spotify_search(search_query, category):
                 }
                 clean_data_list.append(clean_dict)
         return clean_data_list
-
-
-
-

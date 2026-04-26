@@ -82,13 +82,13 @@ def tidal_init():
 
 def tidal_api(category, query):
     match category:
-        case "album":
+        case "albums":
             return tidal_search_album(query)
-        case "artist":
+        case "artists":
             return tidal_search_artist(query)
-        case "compilation":
+        case "compilations":
             return tidal_search_compilation(query)
-        case "song":
+        case "songs":
             return tidal_search_song(query)
     return None
 
@@ -103,7 +103,7 @@ def tidal_search(query, explicitFilter, countryCode, type):
     params = {
         'explicitFilter': explicitFilter,
         'countryCode': countryCode,
-        'include': type,
+        'include': f"{type},artists",
     }
 
     response = requests.get(
@@ -124,17 +124,112 @@ def tidal_search(query, explicitFilter, countryCode, type):
         print(f"Search Failed: {response.status_code} - {response.text}")
         return []
 
+
+def get_artist_info(album_id):
+    headers = {
+        'accept': 'application/vnd.api+json',
+        "Authorization": f"Bearer {session.access_token}"
+    }
+    params = {'include': 'artists', 'countryCode': 'US'}
+
+    url = f'https://openapi.tidal.com/v2/albums/{album_id}/relationships/artists'
+    response = requests.get(url, params=params, headers=headers)
+
+    artist_info = {"name": "Unknown Artist", "link": "No Link Available"}
+
+    if response.status_code == 200:
+        print("Artist lookup succeeded.")
+        res_json = response.json()
+        included = res_json.get("included", [])
+
+        for item in included:
+            if item.get('type') == 'artists':
+                attr = item.get('attributes', {})
+                artist_info["name"] = attr.get('name', 'Unknown Artist')
+
+                links = attr.get('externalLinks', [])
+
+                if links:
+                    artist_info["link"] = links[0].get('href')
+                return artist_info
+
+    print("Artist lookup failed.")
+
+    return artist_info
+
+
+def clean_result(item, type, artist_info=None):
+    # Accepted parameters for type are: 'album', 'song', 'artist', 'compilation'
+    attr = item.get('attributes', {})
+
+    artist_name = "Unknown Artist"
+    artist_link = "No Link Available"
+
+    if artist_info:
+        artist_name = artist_info.get("name", "Unknown Artist")
+        artist_link = artist_info.get("link", "No Link Available")
+
+    links = attr.get('externalLinks', [])
+    link = links[0].get('href') if links else "No Link Available"
+
+    images = attr.get('imageLinks', [])
+    thumbnail = images[0].get('href') if images else None
+
+    clean_dict = {
+        "link": link,
+        "thumbnail": thumbnail,
+        "source": "Tidal API",
+        "explicit": attr.get('explicit')
+    }
+
+    match type:
+        case 'album' | 'compilation':
+            clean_dict.update({
+                "type": type,
+                "title": attr.get('title'),
+                "track_count": attr.get('numberOfItems'),
+                "duration": attr.get('duration'),
+                "release_date": attr.get('releaseDate'),
+                "artist": artist_name,
+                "artist_link": artist_link
+            })
+            return clean_dict
+
+        case 'song':
+            clean_dict.update({
+                "type": type,
+                "title": attr.get('title'),
+                "release_date": attr.get('releaseDate'),
+                "artist": artist_name,
+                "artist_link": artist_link
+            })
+            return clean_dict
+
+        case 'artist':
+            clean_dict.update({
+                "type": "artist",
+                "title": attr.get('name'),
+            })
+            return clean_dict
+
+    return None
+
+
 def tidal_search_album(query):
     print(f"Searching for album '{query}'")
 
     results = tidal_search(query, "INCLUDE", 'US', 'albums')
 
-    top_album = max(results, key=lambda x: x['attributes'].get('popularity', 0))
+    album_items = [item for item in results if item['type'] == 'albums']
 
-    print(f"Top Result: {top_album['attributes']['title']}")
-    print(f"Score: {top_album['attributes']['popularity']}")
+    top_album = max(album_items, key=lambda x: x['attributes'].get('popularity', 0))
 
-    return results, top_album
+    top_album_id = top_album.get('id')
+    artist_info = get_artist_info(top_album_id)
+
+    cleaned_top_album = clean_result(top_album, 'album', artist_info)
+
+    return cleaned_top_album
 
 
 def tidal_search_song(query):
@@ -144,7 +239,12 @@ def tidal_search_song(query):
 
     top_song = max(results, key=lambda x: x['attributes'].get('popularity', 0))
 
-    return results, top_song
+    top_song_id = top_song.get('id')
+    artist_info = get_artist_info(top_song_id)
+
+    cleaned_top_song = clean_result(top_song, 'song', artist_info)
+
+    return cleaned_top_song
 
 def tidal_search_artist(query):
     print(f"Searching for artist '{query}'")
@@ -153,7 +253,9 @@ def tidal_search_artist(query):
 
     top_artist = max(results, key=lambda x: x['attributes'].get('popularity', 0))
 
-    return results, top_artist
+    cleaned_top_artist = clean_result(top_artist, 'artist')
+
+    return cleaned_top_artist
 
 def tidal_search_compilation(query):
     print(f"Searching for EPs: '{query}'")
@@ -182,8 +284,9 @@ def tidal_search_compilation(query):
 
     top_ep = max(valid_eps, key=lambda x: x['attributes'].get('popularity', 0), default=None)
 
-    return valid_eps, top_ep
+    top_ep_id = top_ep.get('id')
+    artist_info = get_artist_info(top_ep_id)
 
+    cleaned_top_ep = clean_result(top_ep, 'compilation', artist_info)
 
-
-
+    return cleaned_top_ep

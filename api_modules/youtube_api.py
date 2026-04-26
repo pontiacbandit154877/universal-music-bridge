@@ -5,9 +5,7 @@ yt = YTMusic()
 
 def youtube_api(search_query, category):
 
-
     clean_data_list = []
-
 
     if category == "albums":
 
@@ -63,7 +61,6 @@ def youtube_api(search_query, category):
                 clean_dict = {
                     "type": "artist",
                     "title": artist['artist'],
-                    "artist": artist['artist'],
                     "link": link,
                     "thumbnail": artist['thumbnails'],
                     "source": "YouTube Music"
