@@ -237,12 +237,15 @@ def tidal_search_song(query):
 
     results = tidal_search(query, "INCLUDE", 'US', 'tracks')
 
-    top_song = max(results, key=lambda x: x['attributes'].get('popularity', 0))
+    track_items = [item for item in results if item.get('type') == 'tracks']
 
-    top_song_id = top_song.get('id')
-    artist_info = get_artist_info(top_song_id)
+    if not track_items:
+        print(f"No tracks found for '{query}'.")
+        return None
 
-    cleaned_top_song = clean_result(top_song, 'song', artist_info)
+    top_song = max(track_items, key=lambda x: x['attributes'].get('popularity', 0))
+
+    cleaned_top_song = clean_result(top_song, 'song')
 
     return cleaned_top_song
 

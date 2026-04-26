@@ -19,7 +19,7 @@ def search_apis(query, types, apis):
                 for type in types:
                     if type=='singles':
                         continue
-                    results = tidal_api(query, type)
+                    results = tidal_api(type, query)
                     tidal_results.append(results)
             case "youtube":
                 for type in types:

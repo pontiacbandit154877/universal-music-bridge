@@ -1,13 +1,14 @@
 import tkinter as tk
 import webbrowser
-from api_modules.youtube_api import youtube_api
+from main import search_apis
 
+# initialize main application window
 window = tk.Tk()
 window.title("Universal Music Bridge")
 window.geometry("900x800")
 window.configure(bg="#dff6ff")  # light blue
 
-# title
+# app title label
 title_label = tk.Label(
     window,
     text="Universal Music Bridge",
@@ -16,7 +17,7 @@ title_label = tk.Label(
 )
 title_label.pack(pady=15)
 
-# song search input labels
+# song input labels
 song_label = tk.Label(
     window,
     text="Song Name",
@@ -56,7 +57,8 @@ artist_label = tk.Label(
 )
 artist_label.pack(pady=5)
 
-
+# function to make the placeholder of the search bar have "Type an Artist..." in gray
+# until user types in it
 def clear_artist_placeholder(event):
     if artist_entry.get() == "Type an artist...":
         artist_entry.delete(0, tk.END)
@@ -129,58 +131,65 @@ def search():
     song = song_entry.get()
     artist = artist_entry.get()
 
-    selected = []
+    apis = []
 
     if youtube_var.get():
-        selected.append("YouTube Music")
+        apis.append("youtube")
     if spotify_var.get():
-        selected.append("Spotify")
+        apis.append("spotify")
     if tidal_var.get():
-        selected.append("Tidal")
+        apis.append("tidal")
 
-    if selected:
+    if apis:
         results_label.config(text="Results:")
 
+        query = song
 
-        if youtube_var.get():
-            youtube_results = youtube_api(song, "songs")
+        tidal_results, youtube_results, spotify_results = search_apis(
+            query,
+            ["songs"],
+            apis
+        )
 
-            for result in youtube_results[:4]:
+        if youtube_var.get() and youtube_results:
+            tk.Label(results_frame, text="YouTube Results:", bg="#dff6ff").pack()
+
+            for result in youtube_results[0][:4]:
+                    tk.Button(
+                        results_frame,
+                        text=result["title"] + " - " + result["artist"],
+                        font=("Segoe UI", 12),
+                        width=45,
+                        bg="#caf0f8",
+                        fg="#0077b6",
+                        relief="groove",
+                        command=lambda link=result["link"]: webbrowser.open(link)
+                    ).pack(pady=5)
+
+        if spotify_var.get() and spotify_results:
+            tk.Label(results_frame, text="Spotify Results:", bg="#dff6ff", fg="#0077b6").pack()
+
+            for result in spotify_results[0][:4]:
                 tk.Button(
+                    results_frame,
+                    text=result["title"] + " - " + result["artist"],
+                    width=45,
+                    bg="#caf0f8",
+                    fg="#0077b6",
+                    relief="groove",
+                    command=lambda link=result["link"]: webbrowser.open(link)
+                ).pack(pady=5)
+
+        if tidal_var.get() and tidal_results and isinstance(tidal_results[0], dict):
+            tk.Label(results_frame, text="Tidal Result:", bg="#dff6ff").pack()
+
+            result = tidal_results[0] if isinstance(tidal_results, list) else tidal_results
+
+            tk.Button(
                 results_frame,
-                text=result["title"] + " - " + result["artist"],
-                font=("Segoe UI", 12),
-                width=45,
-                bg="#caf0f8",
-                fg="#0077b6",
-                relief="groove",
+                text=result["title"] + " - " + result.get("artist", "Unknown"),
                 command=lambda link=result["link"]: webbrowser.open(link)
             ).pack(pady=5)
-
-
-        if spotify_var.get():
-            tk.Label(
-            results_frame,
-            text="Spotify result will appear here",
-            font=("Segoe UI", 12),
-            width=40,
-            relief="groove",
-            bg="#dff6ff",
-            fg="#0077b6",
-            pady=8
-        ).pack(pady=5)
-
-        if tidal_var.get():
-            tk.Label(
-            results_frame,
-            text="Tidal result will appear here",
-            font=("Segoe UI", 12),
-            width=40,
-            relief="groove",
-            bg="#dff6ff",
-            fg="#0077b6",
-            pady=8
-        ).pack(pady=5)
 
     else:
         results_label.config(text="No platform selected")
