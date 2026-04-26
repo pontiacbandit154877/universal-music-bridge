@@ -10,7 +10,6 @@ def search_apis(query, types, apis):
     # Accepted apis are: 'tidal', 'youtube', 'spotify'
     print(f"Searching for {types} {query} on {apis}")
     tidal_results = []
-    tidal_top_hit_results = []
     youtube_results = []
     spotify_results = []
 
@@ -20,9 +19,8 @@ def search_apis(query, types, apis):
                 for type in types:
                     if type=='singles':
                         continue
-                    results, top_hit = tidal_api(query, type)
+                    results = tidal_api(query, type)
                     tidal_results.append(results)
-                    tidal_top_hit_results.append(top_hit)
             case "youtube":
                 for type in types:
                     results = youtube_api(query, type)
@@ -32,4 +30,4 @@ def search_apis(query, types, apis):
                     results = spotify_search(query, type)
                     spotify_results.append(results)
 
-    return tidal_results, tidal_top_hit_results, youtube_results, spotify_results
+    return tidal_results, youtube_results, spotify_results
