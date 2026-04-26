@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import re
 from pathlib import Path
@@ -80,7 +81,7 @@ def tidal_init():
     print(f"Login Status: {load_session_from_env()}")
     session.country_code="US"
 
-def tidal_api(category, query):
+def tidal_api(query, category):
     match category:
         case "albums":
             return tidal_search_album(query)
@@ -109,8 +110,15 @@ def tidal_search(query, explicitFilter, countryCode, type):
     params = {
         'explicitFilter': explicitFilter,
         'countryCode': countryCode,
-        'include': f"{type},artists",
     }
+
+    match type:
+        case "albums" | "compilations":
+            params['include'] = ['albums', 'artists', 'genres', 'coverArt']
+        case "tracks":
+            params['include'] = ['tracks', 'artists', 'albums', 'genres', 'coverArt', 'albumStatistics']
+        case "artists":
+            params['include'] = ['albums', 'followers', 'profileArt']
 
     response = requests.get(
         f'https://openapi.tidal.com/v2/searchResults/{query_formatted}',
@@ -123,7 +131,6 @@ def tidal_search(query, explicitFilter, countryCode, type):
     if response.status_code == 200:
         response_json = response.json()
         results = response_json["included"]
-        print(results)
 
         return results
     else:
@@ -164,7 +171,37 @@ def get_artist_info(item_id, item_type="albums"):
     return artist_info
 
 
-def clean_result(item, type, artist_info=None):
+def get_album_thumbnail_by_id(album_id):
+    headers = {
+        'accept': 'application/vnd.api+json',
+        "Authorization": f"Bearer {session.access_token}"
+    }
+    params = {'countryCode': 'US', 'include': 'coverArt'}
+    url = f'https://openapi.tidal.com/v2/albums/{album_id}'
+
+    response = requests.get(url, params=params, headers=headers)
+
+    if response.status_code == 200:
+        res_json = response.json()
+        included = res_json.get("included", [])
+
+        artwork_obj = next((item for item in included if item.get("type") == "artworks"), None)
+
+        if artwork_obj:
+            attr = artwork_obj.get("attributes", {})
+            files = attr.get("files", [])
+
+            if files:
+                standard_res = next((f for f in files if f.get('meta', {}).get('width') == 640), None)
+
+                if standard_res:
+                    return standard_res.get('href')
+
+                return files[0].get('href')
+
+    return None
+
+def clean_result(item, type, artist_info=None, thumbnail_url=None):
     # Accepted parameters for type are: 'album', 'song', 'artist', 'compilation'
     attr = item.get('attributes', {})
     item_id = item.get('id')
@@ -186,8 +223,10 @@ def clean_result(item, type, artist_info=None):
     else:
         link = "No Link Available"
 
-    images = attr.get('imageLinks', [])
-    thumbnail = images[0].get('href') if images else None
+    thumbnail = thumbnail_url
+    if not thumbnail:
+        images = attr.get('imageLinks', [])
+        thumbnail = images[0].get('href') if images else None
 
     clean_dict = {
         "link": link,
@@ -237,31 +276,69 @@ def tidal_search_album(query):
 
     top_album = max(album_items, key=lambda x: x['attributes'].get('popularity', 0))
 
+    print(json.dumps(top_album, indent=4))
+
     top_album_id = top_album.get('id')
+
+    album_thumbnail = get_album_thumbnail_by_id(top_album_id)
     artist_info = get_artist_info(top_album_id)
 
-    cleaned_top_album = clean_result(top_album, 'album', artist_info)
+    cleaned_top_album = clean_result(top_album, 'album', artist_info, album_thumbnail)
 
     return cleaned_top_album
 
+
 def tidal_search_song(query):
-    print(f"Searching for song '{query}'")
-    results = tidal_search(query, "INCLUDE", 'US', 'tracks')
+    results = tidal_search(query, "INCLUDE", "US", "tracks")
     track_items = [item for item in results if item.get('type') == 'tracks']
 
     if not track_items:
         return []
-    # sort all results by popularity to get the best matches
-    track_items = sorted(track_items, key=lambda x: x['attributes'].get('popularity', 0), reverse=True)
-    top_tracks = []
-    # grab the top 4 tracks instead of just 1
-    for track in track_items[:4]:
-        track_id = track.get('id')
-        artist_info = get_artist_info(track_id, "tracks")
-        cleaned = clean_result(track, 'song', artist_info)
 
+    normalized_query = normalize(query)
+
+    exact_matches = []
+    other_matches = []
+
+    for item in track_items:
+        track_title = item.get('attributes', {}).get('title', '')
+        if normalize(track_title) == normalized_query:
+            exact_matches.append(item)
+        else:
+            other_matches.append(item)
+
+    exact_matches = sorted(exact_matches, key=lambda x: x['attributes'].get('popularity', 0), reverse=True)
+    other_matches = sorted(other_matches, key=lambda x: x['attributes'].get('popularity', 0), reverse=True)
+
+    combined_candidates = exact_matches + other_matches
+
+    top_tracks = []
+
+    # Select top 4 tracks
+    for track in combined_candidates[:4]:
+        track_id = track.get('id')
+
+        print(f"Length of track list: {len(combined_candidates)}")
+
+        # Hydrate album parent relationship
+        track_url = f"https://openapi.tidal.com/v2/tracks/{track_id}"
+        headers = {'accept': 'application/vnd.api+json', "Authorization": f"Bearer {session.access_token}"}
+        params = {'countryCode': 'US', 'include': 'albums'}
+        track_resp = requests.get(track_url, headers=headers, params=params)
+
+        full_track = track_resp.json().get('data', track) if track_resp.status_code == 200 else track
+        artist_info = get_artist_info(track_id, "tracks")
+
+        album_thumbnail = None
+        album_rel = full_track.get('relationships', {}).get('albums', {}).get('data', [])
+        if album_rel:
+            album_thumbnail = get_album_thumbnail_by_id(album_rel[0].get('id'))
+
+        # Clean and add to list
+        cleaned = clean_result(full_track, 'song', artist_info, thumbnail_url=album_thumbnail)
         if cleaned:
             top_tracks.append(cleaned)
+
     return top_tracks
 
 def tidal_search_artist(query):
@@ -304,7 +381,8 @@ def tidal_search_compilation(query):
 
     top_ep_id = top_ep.get('id')
     artist_info = get_artist_info(top_ep_id)
+    ep_thumbnail = get_album_thumbnail_by_id(top_ep_id)
 
-    cleaned_top_ep = clean_result(top_ep, 'compilation', artist_info)
+    cleaned_top_ep = clean_result(top_ep, 'compilation', artist_info, ep_thumbnail)
 
     return cleaned_top_ep
