@@ -1,6 +1,10 @@
 import tkinter as tk
 import webbrowser
 from main import search_apis
+from PIL import Image, ImageTk
+import requests
+from io import BytesIO
+
 
 # class to change button color when you hover
 class HoverButton(tk.Button):
@@ -45,7 +49,7 @@ LABEL_STYLE = {
     "fg": APP_FG,
     "font": ("Segoe UI", 20)
 }
-#style for small labels
+# style for small labels
 SMALL_LABEL_STYLE = {
     "bg": APP_BG,
     "fg": APP_FG,
@@ -107,6 +111,7 @@ song_label = tk.Label(
 )
 song_label.pack(pady=5)
 
+
 # function to make the placeholder of the search bar have "Type a Song..." in gray
 # until user types in it
 
@@ -115,18 +120,19 @@ def clear_placeholder(event):
         song_entry.delete(0, tk.END)
         song_entry.config(fg="black")
 
+
 def add_placeholder(event):
     if song_entry.get() == "":
         song_entry.insert(0, "Type a song...")
         song_entry.config(fg="gray")
 
+
 song_entry = tk.Entry(window, width=50, fg="gray")
-song_entry.insert(0,"Type a song...")
+song_entry.insert(0, "Type a song...")
 song_entry.pack(pady=5)
 
 song_entry.bind("<FocusIn>", clear_placeholder)
 song_entry.bind("<FocusOut>", add_placeholder)
-
 
 # artist search input labels
 
@@ -137,6 +143,7 @@ artist_label = tk.Label(
 )
 artist_label.pack(pady=5)
 
+
 # function to make the placeholder of the search bar have "Type an Artist..." in gray
 # until user types in it
 def clear_artist_placeholder(event):
@@ -144,13 +151,15 @@ def clear_artist_placeholder(event):
         artist_entry.delete(0, tk.END)
         artist_entry.config(fg="black")
 
+
 def add_artist_placeholder(event):
     if artist_entry.get() == "":
         artist_entry.insert(0, "Type an artist...")
         artist_entry.config(fg="gray")
 
+
 artist_entry = tk.Entry(window, width=50, fg="gray")
-artist_entry.insert(0,"Type an artist...")
+artist_entry.insert(0, "Type an artist...")
 artist_entry.pack(pady=5)
 
 artist_entry.bind("<FocusIn>", clear_artist_placeholder)
@@ -195,6 +204,7 @@ tidal_checkbox = tk.Checkbutton(
 )
 tidal_checkbox.pack(side="left", padx=15)
 
+
 # search function
 
 def create_result_button(parent, text, link):
@@ -204,6 +214,25 @@ def create_result_button(parent, text, link):
         command=lambda: webbrowser.open(link),
         **RESULT_BUTTON_STYLE
     ).pack(pady=5)
+
+
+def create_album_art(parent, image_url):
+    try:
+        response = requests.get(image_url)
+        img_data = response.content
+
+        img = Image.open(BytesIO(img_data))
+        img = img.resize((120, 120))  # adjust size here
+
+        photo = ImageTk.PhotoImage(img)
+
+        label = tk.Label(parent, image=photo, bg=APP_BG)
+        label.image = photo
+        label.pack(pady=5)
+
+    except:
+        pass
+
 
 def search():
     for widget in results_frame.winfo_children():
@@ -247,6 +276,11 @@ def search():
             tk.Label(results_frame, text="YouTube Results:", **RESULT_SECTION_STYLE).pack()
 
             for result in youtube_results[0][:4]:
+
+                if result.get("thumbnail"):
+                    image_url = result["thumbnail"][0]["url"]  # pick the best image
+                    create_album_art(results_frame, image_url)
+
                 create_result_button(
                     results_frame,
                     result["title"] + " - " + result["artist"],
@@ -257,23 +291,38 @@ def search():
             tk.Label(results_frame, text="Spotify Results:", **RESULT_SECTION_STYLE).pack()
 
             for result in spotify_results[0][:4]:
+
+                if result.get("thumbnail"):
+                    image_url = result["thumbnail"][0]["url"]
+                    create_album_art(results_frame, image_url)
+
                 create_result_button(
                     results_frame,
                     result["title"] + " - " + result["artist"],
                     result["link"]
                 )
+                print(result)
 
         if tidal_var.get() and tidal_results and isinstance(tidal_results[0], dict):
             tk.Label(results_frame, text="Tidal Results:", **RESULT_SECTION_STYLE).pack()
 
             result = tidal_results[0] if isinstance(tidal_results, list) else tidal_results
 
+            if result.get("thumbnail"):
+                thumbnail = result["thumbnail"]
+
+                if isinstance(thumbnail, list):
+                    image_url = thumbnail[0]["url"]
+                else:
+                    image_url = thumbnail
+
+                create_album_art(results_frame, image_url)
+
             create_result_button(
                 results_frame,
                 result["title"] + " - " + result.get("artist", "Unknown"),
                 result["link"]
             )
-
     else:
         results_label.config(text="No platform selected")
 
@@ -289,17 +338,45 @@ search_button.pack(pady=20)
 results_label = tk.Label(
     window,
     text="Results will appear here",
-    font=("Segoe UI", 12),
-    fg="gray",
-    bg="#dff6ff"
+    **RESULTS_LABEL_STYLE
 )
-
 results_label.pack(pady=10)
 
-# result container
-results_frame = tk.Frame(window, bg=APP_BG)
-results_frame.pack(pady=20)
+# scrollable results container
+container = tk.Frame(window, bg=APP_BG)
+container.pack(fill="both", expand=True)
+
+canvas = tk.Canvas(container, bg=APP_BG, highlightthickness=0)
+scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
+
+results_frame = tk.Frame(canvas, bg=APP_BG)
+
+results_frame.bind(
+    "<Configure>",
+    lambda e: canvas.configure(
+        scrollregion=canvas.bbox("all")
+    )
+)
+
+canvas.create_window((0, 0), window=results_frame, anchor="n")
 
 
+def resize_frame(event):
+    canvas.itemconfig("all", width=event.width)
+
+
+canvas.bind("<Configure>", resize_frame)
+
+canvas.configure(yscrollcommand=scrollbar.set)
+
+canvas.pack(fill="both", expand=True)
+scrollbar.pack(side="right", fill="y")
+
+
+def _on_mousewheel(event):
+    canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+
+canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
 window.mainloop()
