@@ -293,6 +293,7 @@ results_label = tk.Label(
     fg="gray",
     bg="#dff6ff"
 )
+
 results_label.pack(pady=10)
 
 # result container
