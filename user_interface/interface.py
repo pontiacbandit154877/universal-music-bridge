@@ -111,6 +111,7 @@ song_label = tk.Label(
 )
 song_label.pack(pady=5)
 
+# album search input labels
 
 # function to make the placeholder of the search bar have "Type a Song..." in gray
 # until user types in it
@@ -126,7 +127,6 @@ def add_placeholder(event):
         song_entry.insert(0, "Type a song...")
         song_entry.config(fg="gray")
 
-
 song_entry = tk.Entry(window, width=50, fg="gray")
 song_entry.insert(0, "Type a song...")
 song_entry.pack(pady=5)
@@ -134,16 +134,37 @@ song_entry.pack(pady=5)
 song_entry.bind("<FocusIn>", clear_placeholder)
 song_entry.bind("<FocusOut>", add_placeholder)
 
-# artist search input labels
+album_label = tk.Label(
+    window,
+    text="Album Name",
+    **LABEL_STYLE
+)
+album_label.pack(pady=5)
 
+def clear_album_placeholder(event):
+    if album_entry.get() == "Type an album...":
+        album_entry.delete(0, tk.END)
+        album_entry.config(fg="black")
+
+def add_album_placeholder(event):
+    if album_entry.get() == "":
+        album_entry.insert(0, "Type an album...")
+        album_entry.config(fg="gray")
+
+album_entry = tk.Entry(window, width=50, fg="gray")
+album_entry.insert(0, "Type an album...")
+album_entry.pack(pady=5)
+
+album_entry.bind("<FocusIn>", clear_album_placeholder)
+album_entry.bind("<FocusOut>", add_album_placeholder)
+
+# artist search input labels
 artist_label = tk.Label(
     window,
     text="Artist Name",
     **LABEL_STYLE
 )
 artist_label.pack(pady=5)
-
-
 # function to make the placeholder of the search bar have "Type an Artist..." in gray
 # until user types in it
 def clear_artist_placeholder(event):
@@ -257,10 +278,21 @@ def search():
 
     song = song_entry.get().replace("Type a song...", "").strip()
     artist = artist_entry.get().replace("Type an artist...", "").strip()
-    query = f"{song} {artist}".strip()
+    album = album_entry.get().replace("Type an album...", "").strip()
 
-    if not query:
-        results_label.config(text="Please enter a song or artist.")
+    search_types = []
+
+    if album:
+        search_types = ["albums"]
+        query = f"{album} {artist}".strip()
+    elif song:
+        search_types = ["songs"]
+        query = f"{song} {artist}".strip()
+    elif artist:
+        search_types = ["artists"]
+        query = artist
+    else:
+        results_label.config(text="Please enter a song, album, or artist.")
         return
 
     # Determine APIS
@@ -276,7 +308,6 @@ def search():
     results_label.config(text="Results:")
 
     # Call API through main function
-    search_types = ["songs"] if song else ["artists"]
     tidal_results, youtube_results, spotify_results = search_apis(query, search_types, apis)
 
     for widget in results_frame.winfo_children():
