@@ -23,44 +23,47 @@ class HoverButton(tk.Button):
     def on_leave(self, event):
         self.config(bg=self.default_bg)
 
+# defining themes
+APP_BG = "#0f0f0e"
+CARD_BG = "#1e1e1e"
+TEXT_MAIN = "#ffffff"
+ACCENT = "#27B98E"
+BUTTON_HOVER = "#48cae4"
+ENTRY_BG = "#2b2b2b"
 
 # initialize main application window
 window = tk.Tk()
 window.title("Universal Music Bridge")
 window.geometry("900x800")
 
-# defining themes
-
 # main app background
-APP_BG = "#dff6ff"
-APP_FG = "#0077b6"
 window.configure(bg=APP_BG)
 
 # style for title
 TITLE_STYLE = {
     "bg": APP_BG,
-    "fg": APP_FG,
-    "font": ("Segoe UI", 25)
+    "fg": ACCENT,
+    "font": ("Segoe UI", 25, "bold")
 }
 
 # style for standard labels
 LABEL_STYLE = {
     "bg": APP_BG,
-    "fg": APP_FG,
+    "fg": ACCENT,
     "font": ("Segoe UI", 20)
 }
 # style for small labels
 SMALL_LABEL_STYLE = {
     "bg": APP_BG,
-    "fg": APP_FG,
+    "fg": ACCENT,
     "font": ("Segoe UI", 16)
 }
 
 # style for buttons
 BUTTON_STYLE = {
-    "bg": "#90e0ef",
-    "hover_bg": "#ade8f4",
-    "fg": "black",
+    "bg": "#198062",
+    "hover_bg": ACCENT,
+    "fg": "white",
     "font": ("Segoe UI", 12, "bold"),
     "relief": "flat",
     "padx": 10,
@@ -69,30 +72,33 @@ BUTTON_STYLE = {
 
 # style for result buttons
 RESULT_BUTTON_STYLE = {
-    "bg": "#caf0f8",
-    "hover_bg": "#e0fbfc",
-    "fg": "#0077b6",
+    "bg": "#333333",
+    "hover_bg": "#444444",
+    "fg": ACCENT,
     "font": ("Segoe UI", 12),
     "width": 35,
-    "relief": "groove"
+    "relief": "flat"
 }
 # style for check box
 CHECKBOX_STYLE = {
     "font": ("Segoe UI", 12),
     "bg": APP_BG,
-    "activebackground": APP_BG
+    "fg": ACCENT,
+    "activebackground": APP_BG,
+    "activeforeground": ACCENT,
+    "selectcolor": "#000000"
 }
 
 RESULTS_LABEL_STYLE = {
-    "font": ("Segoe UI", 12),
-    "fg": "gray",
-    "bg": APP_BG
+    "font": ("Segoe UI", 14, "bold"),
+    "bg": CARD_BG,
+    "fg": ACCENT,
 }
 
 RESULT_SECTION_STYLE = {
-    "bg": APP_BG,
-    "fg": APP_FG,
-    "font": ("Segoe UI", 12, "bold")
+    "bg": CARD_BG,
+    "fg": ACCENT,
+    "font": ("Segoe UI", 14, "bold")
 }
 
 # app title label
@@ -103,88 +109,52 @@ title_label = tk.Label(
 )
 title_label.pack(pady=15)
 
-# song input labels
-song_label = tk.Label(
-    window,
-    text="Song Name",
-    **LABEL_STYLE,
+tk.Label(window, text="Search Category", **SMALL_LABEL_STYLE).pack(pady=(10, 0))
+
+# Variable to hold the dropdown choice
+search_category = tk.StringVar(window)
+search_category.set("Song")
+
+# Dropdown Menu
+dropdown = tk.OptionMenu(window, search_category, "Song", "Album", "Artist")
+dropdown.config(
+    bg=ENTRY_BG,
+    fg=TEXT_MAIN,
+    activebackground=ACCENT,
+    activeforeground="white",
+    highlightthickness=0,
+    relief="flat",
+    font=("Segoe UI", 11),
+    width=15
 )
-song_label.pack(pady=5)
+dropdown["menu"].config(bg=ENTRY_BG, fg=TEXT_MAIN, font=("Segoe UI", 11))
+dropdown.pack(pady=10)
 
-# album search input labels
-
-# function to make the placeholder of the search bar have "Type a Song..." in gray
-# until user types in it
-
-def clear_placeholder(event):
-    if song_entry.get() == "Type a song...":
-        song_entry.delete(0, tk.END)
-        song_entry.config(fg="black")
-
-
-def add_placeholder(event):
-    if song_entry.get() == "":
-        song_entry.insert(0, "Type a song...")
-        song_entry.config(fg="gray")
-
-song_entry = tk.Entry(window, width=50, fg="gray")
-song_entry.insert(0, "Type a song...")
-song_entry.pack(pady=5)
-
-song_entry.bind("<FocusIn>", clear_placeholder)
-song_entry.bind("<FocusOut>", add_placeholder)
-
-album_label = tk.Label(
+query_entry = tk.Entry(
     window,
-    text="Album Name",
-    **LABEL_STYLE
+    width=55,
+    bg=ENTRY_BG,
+    fg="gray",
+    insertbackground=ACCENT,
+    relief="flat",
+    font=("Segoe UI", 12)
 )
-album_label.pack(pady=5)
+query_entry.insert(0, "Enter search term...")
+query_entry.pack(pady=10, ipady=3)
 
-def clear_album_placeholder(event):
-    if album_entry.get() == "Type an album...":
-        album_entry.delete(0, tk.END)
-        album_entry.config(fg="black")
+# Enter single entry for query
+def on_focus_in(e):
+    if query_entry.get() == "Enter search term...":
+        query_entry.delete(0, tk.END)
+        query_entry.config(fg="white")
 
-def add_album_placeholder(event):
-    if album_entry.get() == "":
-        album_entry.insert(0, "Type an album...")
-        album_entry.config(fg="gray")
+def on_focus_out(e):
+    if query_entry.get() == "":
+        query_entry.insert(0, "Enter search term...")
+        query_entry.config(fg="gray")
 
-album_entry = tk.Entry(window, width=50, fg="gray")
-album_entry.insert(0, "Type an album...")
-album_entry.pack(pady=5)
-
-album_entry.bind("<FocusIn>", clear_album_placeholder)
-album_entry.bind("<FocusOut>", add_album_placeholder)
-
-# artist search input labels
-artist_label = tk.Label(
-    window,
-    text="Artist Name",
-    **LABEL_STYLE
-)
-artist_label.pack(pady=5)
-# function to make the placeholder of the search bar have "Type an Artist..." in gray
-# until user types in it
-def clear_artist_placeholder(event):
-    if artist_entry.get() == "Type an artist...":
-        artist_entry.delete(0, tk.END)
-        artist_entry.config(fg="black")
-
-
-def add_artist_placeholder(event):
-    if artist_entry.get() == "":
-        artist_entry.insert(0, "Type an artist...")
-        artist_entry.config(fg="gray")
-
-
-artist_entry = tk.Entry(window, width=50, fg="gray")
-artist_entry.insert(0, "Type an artist...")
-artist_entry.pack(pady=5)
-
-artist_entry.bind("<FocusIn>", clear_artist_placeholder)
-artist_entry.bind("<FocusOut>", add_artist_placeholder)
+query_entry.bind("<FocusIn>", on_focus_in)
+query_entry.bind("<FocusOut>", on_focus_out)
 
 # checkboxes to filter which platform to be used
 filter_label = tk.Label(
@@ -229,7 +199,7 @@ tidal_checkbox.pack(side="left", padx=15)
 # search function
 
 def create_result_button(parent, text, link):
-    result_card = tk.Frame(parent, bg=APP_BG)
+    result_card = tk.Frame(parent, bg=CARD_BG)
     result_card.pack(pady=5, anchor='n')
 
     HoverButton(
@@ -249,8 +219,7 @@ def create_result_button(parent, text, link):
 def copy_link(link):
     window.clipboard_clear()
     window.clipboard_append(link)
-    window.update()
-    results_label.config(text="Link copied to clipboard!")
+    results_label.config(text="Link copied!", fg=ACCENT)
 
 
 def create_album_art(parent, image_url):
@@ -263,7 +232,7 @@ def create_album_art(parent, image_url):
 
         photo = ImageTk.PhotoImage(img)
 
-        label = tk.Label(parent, image=photo, bg=APP_BG)
+        label = tk.Label(parent, image=photo, bg=CARD_BG)
         label.image = photo
         label.pack(pady=5, anchor='n')
 
@@ -276,50 +245,47 @@ def search():
     for widget in results_frame.winfo_children():
         widget.destroy()
 
-    song = song_entry.get().replace("Type a song...", "").strip()
-    artist = artist_entry.get().replace("Type an artist...", "").strip()
-    album = album_entry.get().replace("Type an album...", "").strip()
+    user_query = query_entry.get().replace("Enter search term...", "").strip()
+    category = search_category.get()
 
-    search_types = []
-
-    if album:
-        search_types = ["albums"]
-        query = f"{album} {artist}".strip()
-    elif song:
-        search_types = ["songs"]
-        query = f"{song} {artist}".strip()
-    elif artist:
-        search_types = ["artists"]
-        query = artist
-    else:
-        results_label.config(text="Please enter a song, album, or artist.")
+    if not user_query:
+        results_label.config(text="Please enter something to search for.", fg="red")
         return
 
-    # Determine APIS
+    category_map = {
+        "Song": ["songs"],
+        "Album": ["albums"],
+        "Artist": ["artists"]
+    }
+
+    search_types = category_map.get(category)
+
     apis = []
     if youtube_var.get(): apis.append("youtube")
     if spotify_var.get(): apis.append("spotify")
     if tidal_var.get(): apis.append("tidal")
 
     if not apis:
-        results_label.config(text="No platform selected")
+        results_label.config(text="No platform selected", fg="red")
         return
 
-    results_label.config(text="Results:")
+    results_label.config(text=f"Searching {category}s for '{user_query}'...", fg=ACCENT)
+    window.update()
 
     # Call API through main function
-    tidal_results, youtube_results, spotify_results = search_apis(query, search_types, apis)
+    tidal_results, youtube_results, spotify_results = search_apis(user_query, search_types, apis)
 
     for widget in results_frame.winfo_children():
         widget.destroy()
 
+    # Centered column tray
     column_tray = tk.Frame(results_frame, bg=APP_BG)
     column_tray.pack(pady=10, expand=True)
 
     # Youtube column (if selected)
     if youtube_var.get():
-        yt_col = tk.Frame(column_tray, bg=APP_BG, padx=10)
-        yt_col.pack(side="left", fill="y", anchor="n")
+        yt_col = tk.Frame(column_tray, bg=CARD_BG, padx=15)
+        yt_col.pack(side="left", fill="y", anchor="n", padx=15)
 
         tk.Label(yt_col, text="YouTube Music", **RESULT_SECTION_STYLE).pack(pady=10)
 
@@ -334,8 +300,8 @@ def search():
 
     # Spotify column (if selected)
     if spotify_var.get():
-        sp_col = tk.Frame(column_tray, bg=APP_BG, padx=10)
-        sp_col.pack(side="left", fill="y", anchor="n")
+        sp_col = tk.Frame(column_tray, bg=CARD_BG, padx=15)
+        sp_col.pack(side="left", fill="y", anchor="n", padx=15)
 
         tk.Label(sp_col, text="Spotify", **RESULT_SECTION_STYLE).pack(pady=10)
 
@@ -350,8 +316,8 @@ def search():
 
     # Tidal Column (if selected)
     if tidal_var.get():
-        td_col = tk.Frame(column_tray, bg=APP_BG, padx=10)
-        td_col.pack(side="left", fill="y", anchor="n")
+        td_col = tk.Frame(column_tray, bg=CARD_BG, padx=15)
+        td_col.pack(side="left", fill="y", anchor="n", padx=15)
 
         tk.Label(td_col, text="Tidal", **RESULT_SECTION_STYLE).pack(pady=10)
 
@@ -380,13 +346,15 @@ search_button.pack(pady=20)
 results_label = tk.Label(
     window,
     text="Results will appear here",
-    **RESULTS_LABEL_STYLE
+    bg=APP_BG,
+    fg="gray",
+    font=("Segoe UI", 10, "italic")
 )
-results_label.pack(pady=10)
+results_label.pack(pady=5)
 
 # Scrollable results container
 container = tk.Frame(window, bg=APP_BG)
-container.pack(fill="both", expand=True)
+container.pack(fill="both", expand=True, padx=20, pady=20)
 
 canvas = tk.Canvas(container, bg=APP_BG, highlightthickness=0)
 scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
