@@ -116,7 +116,7 @@ search_category = tk.StringVar(window)
 search_category.set("Song")
 
 # Dropdown Menu
-dropdown = tk.OptionMenu(window, search_category, "Song", "Album", "Artist")
+dropdown = tk.OptionMenu(window, search_category, "Song", "Album", "Artist", "Compilation", "Single")
 dropdown.config(
     bg=ENTRY_BG,
     fg=TEXT_MAIN,
@@ -255,7 +255,9 @@ def search():
     category_map = {
         "Song": ["songs"],
         "Album": ["albums"],
-        "Artist": ["artists"]
+        "Artist": ["artists"],
+        "Compilation": ["compilations"],
+        "Single": ["singles"]
     }
 
     search_types = category_map.get(category)

@@ -6,7 +6,7 @@ from api_modules.spotify_api import spotify_search
 tidal_init()
 
 def search_apis(query, types, apis):
-    # Accepted types are: 'albums', 'singles', 'songs', 'compilations', 'artists
+    # Accepted types are: 'albums', 'singles', 'songs', 'compilations', 'artists'
     # Accepted apis are: 'tidal', 'youtube', 'spotify'
     print(f"Searching for {types} {query} on {apis}")
     tidal_results = []
@@ -17,8 +17,6 @@ def search_apis(query, types, apis):
         match api:
             case "tidal":
                 for type in types:
-                    if type=='singles':
-                        continue
                     results = tidal_api(query, type)
                     tidal_results.append(results)
             case "youtube":

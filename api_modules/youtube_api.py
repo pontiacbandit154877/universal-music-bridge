@@ -117,3 +117,5 @@ def youtube_api(search_query, category):
                 }
                 clean_data_list.append(clean_dict)
         return(clean_data_list)
+
+    return None

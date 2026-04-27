@@ -31,7 +31,6 @@ def save_session_to_env():
     set_key(env_path, "TIDAL_SESSION_EXPIRY_TIME", str(session.expiry_time))
     print("Session Saved!")
 
-
 def load_session_from_env():
     if ACCESS_TOKEN and ACCESS_TOKEN != "None" and EXPIRY_TIME_UNFORMATTED and EXPIRY_TIME_UNFORMATTED != "None":
         try:
@@ -89,7 +88,7 @@ def tidal_api(query, category):
             return tidal_search_artist(query)
         case "compilations":
             return tidal_search_compilation(query)
-        case "songs":
+        case "songs" | "singles":
             return tidal_search_song(query)
     return None
 
@@ -101,6 +100,7 @@ def normalize(text):
 
 def tidal_search(query, explicitFilter, countryCode, type):
     query_formatted = query.replace(" ", "%20")
+    query_formatted = query_formatted.replace("'", "%27")
 
     headers = {
         'accept': 'application/vnd.api+json',
@@ -272,9 +272,7 @@ def clean_result(item, type, artist_info=None, thumbnail_url=None):
                 "track_count": attr.get('numberOfItems'),
                 "duration": attr.get('duration'),
                 "release_date": attr.get('releaseDate'),
-                "artist": artist_name,
-                "artist_link": artist_link
-            })
+                "artist": artist_name,"artist_link": artist_link})
             return clean_dict
 
         case 'song':
