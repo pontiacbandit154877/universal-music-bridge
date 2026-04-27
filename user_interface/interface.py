@@ -73,7 +73,7 @@ RESULT_BUTTON_STYLE = {
     "hover_bg": "#e0fbfc",
     "fg": "#0077b6",
     "font": ("Segoe UI", 12),
-    "width": 45,
+    "width": 35,
     "relief": "groove"
 }
 # style for check box
@@ -209,7 +209,7 @@ tidal_checkbox.pack(side="left", padx=15)
 
 def create_result_button(parent, text, link):
     result_card = tk.Frame(parent, bg=APP_BG)
-    result_card.pack(pady=5)
+    result_card.pack(pady=5, anchor='n')
 
     HoverButton(
         result_card,
@@ -244,125 +244,99 @@ def create_album_art(parent, image_url):
 
         label = tk.Label(parent, image=photo, bg=APP_BG)
         label.image = photo
-        label.pack(pady=5)
+        label.pack(pady=5, anchor='n')
 
     except:
         pass
 
 
 def search():
+    # Clear existing results
     for widget in results_frame.winfo_children():
         widget.destroy()
 
-    song = song_entry.get()
-    artist = artist_entry.get()
-
-    if song == "Type a song...":
-        song = ""
-    if artist == "Type an artist...":
-        artist = ""
-
+    song = song_entry.get().replace("Type a song...", "").strip()
+    artist = artist_entry.get().replace("Type an artist...", "").strip()
     query = f"{song} {artist}".strip()
 
     if not query:
         results_label.config(text="Please enter a song or artist.")
         return
 
+    # Determine APIS
     apis = []
+    if youtube_var.get(): apis.append("youtube")
+    if spotify_var.get(): apis.append("spotify")
+    if tidal_var.get(): apis.append("tidal")
 
-    if youtube_var.get():
-        apis.append("youtube")
-    if spotify_var.get():
-        apis.append("spotify")
-    if tidal_var.get():
-        apis.append("tidal")
-
-    if apis:
-        results_label.config(text="Results:")
-
-        search_types = []
-
-        if song and artist:
-            query = f"{song} {artist}"
-            search_types = ["songs"]
-
-        elif song:
-            query = song
-            search_types = ["songs"]
-
-        elif artist:
-            query = artist
-            search_types = ["artists"]
-
-        else:
-            results_label.config(text="Please enter a song or artist.")
-            return
-
-        tidal_results, youtube_results, spotify_results = search_apis(
-            query,
-            search_types,
-            apis
-        )
-
-        if youtube_var.get() and youtube_results:
-            tk.Label(results_frame, text="YouTube Results:", **RESULT_SECTION_STYLE).pack()
-
-            for result in youtube_results[0][:4]:
-
-                if result.get("thumbnail"):
-                    image_url = result["thumbnail"][0]["url"]
-                    create_album_art(results_frame, image_url)
-
-                title = result.get("title", "Unknown Title")
-                artist_name = result.get("artist", artist if artist else "Unknown Artist")
-
-                create_result_button(
-                    results_frame,
-                    f"{title} - {artist_name}",
-                    result["link"]
-                )
-
-        if spotify_var.get() and spotify_results:
-            tk.Label(results_frame, text="Spotify Results:", **RESULT_SECTION_STYLE).pack()
-
-            for result in spotify_results[0][:4]:
-
-                if result.get("thumbnail"):
-                    image_url = result["thumbnail"][0]["url"]
-                    create_album_art(results_frame, image_url)
-
-                create_result_button(
-                    results_frame,
-                    result["title"] + " - " + result["artist"],
-                    result["link"]
-                )
-                print(result)
-
-        if tidal_var.get() and tidal_results and tidal_results[0]:
-            tk.Label(results_frame, text="Tidal Results:", **RESULT_SECTION_STYLE).pack()
-
-            # Safely handle the data whether it's a list (songs) or single dictionary (artists/albums)
-            results_to_display = tidal_results[0] if isinstance(tidal_results[0], list) else [tidal_results[0]]
-
-            for result in results_to_display[:4]:
-                if result.get("thumbnail"):
-                    thumbnail = result["thumbnail"]
-
-                    if isinstance(thumbnail, list):
-                        image_url = thumbnail[0]["url"]
-                    else:
-                        image_url = thumbnail
-
-                    create_album_art(results_frame, image_url)
-
-                create_result_button(
-                    results_frame,
-                    result["title"] + " - " + result.get("artist", "Unknown"),
-                    result["link"]
-                )
-    else:
+    if not apis:
         results_label.config(text="No platform selected")
+        return
 
+    results_label.config(text="Results:")
+
+    # Call API through main function
+    search_types = ["songs"] if song else ["artists"]
+    tidal_results, youtube_results, spotify_results = search_apis(query, search_types, apis)
+
+    for widget in results_frame.winfo_children():
+        widget.destroy()
+
+    column_tray = tk.Frame(results_frame, bg=APP_BG)
+    column_tray.pack(pady=10, expand=True)
+
+    # Youtube column (if selected)
+    if youtube_var.get():
+        yt_col = tk.Frame(column_tray, bg=APP_BG, padx=10)
+        yt_col.pack(side="left", fill="y", anchor="n")
+
+        tk.Label(yt_col, text="YouTube Music", **RESULT_SECTION_STYLE).pack(pady=10)
+
+        if youtube_results and youtube_results[0]:
+            for result in youtube_results[0][:4]:
+                if result.get("thumbnail"):
+                    create_album_art(yt_col, result["thumbnail"][0]["url"])
+
+                create_result_button(yt_col, f"{result.get('title')} - {result.get('artist')}", result["link"])
+        else:
+            tk.Label(yt_col, text="No results found", **RESULTS_LABEL_STYLE).pack()
+
+    # Spotify column (if selected)
+    if spotify_var.get():
+        sp_col = tk.Frame(column_tray, bg=APP_BG, padx=10)
+        sp_col.pack(side="left", fill="y", anchor="n")
+
+        tk.Label(sp_col, text="Spotify", **RESULT_SECTION_STYLE).pack(pady=10)
+
+        if spotify_results and spotify_results[0]:
+            for result in spotify_results[0][:4]:
+                if result.get("thumbnail"):
+                    create_album_art(sp_col, result["thumbnail"][0]["url"])
+
+                create_result_button(sp_col, f"{result['title']} - {result['artist']}", result["link"])
+        else:
+            tk.Label(sp_col, text="No results found", **RESULTS_LABEL_STYLE).pack()
+
+    # Tidal Column (if selected)
+    if tidal_var.get():
+        td_col = tk.Frame(column_tray, bg=APP_BG, padx=10)
+        td_col.pack(side="left", fill="y", anchor="n")
+
+        tk.Label(td_col, text="Tidal", **RESULT_SECTION_STYLE).pack(pady=10)
+
+        if tidal_results and tidal_results[0]:
+            # Normalize Tidal data (handling list vs single dict)
+            res_list = tidal_results[0] if isinstance(tidal_results[0], list) else [tidal_results[0]]
+            for result in res_list[:4]:
+                if result.get("thumbnail"):
+                    # Use your fixed URL logic here
+                    thumb = result["thumbnail"][0]["url"] if isinstance(result["thumbnail"], list) else result[
+                        "thumbnail"]
+                    create_album_art(td_col, thumb)
+
+                create_result_button(td_col, f"{result['title']} - {result.get('artist', 'Unknown')}", result["link"])
+        else:
+            tk.Label(td_col, text="No results found", **RESULTS_LABEL_STYLE).pack()
 
 search_button = HoverButton(
     window,
@@ -379,42 +353,34 @@ results_label = tk.Label(
 )
 results_label.pack(pady=10)
 
-# scrollable results container
+# Scrollable results container
 container = tk.Frame(window, bg=APP_BG)
 container.pack(fill="both", expand=True)
 
 canvas = tk.Canvas(container, bg=APP_BG, highlightthickness=0)
 scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
-
 results_frame = tk.Frame(canvas, bg=APP_BG)
+
+result_window = canvas.create_window((0, 0), window=results_frame, anchor="nw")
 
 results_frame.bind(
     "<Configure>",
-    lambda e: canvas.configure(
-        scrollregion=canvas.bbox("all")
-    )
+    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
 )
 
-canvas.create_window((0, 0), window=results_frame, anchor="n")
+# Ensure results remain centered
+def center_results(event):
+    canvas_width = event.width
+    canvas.itemconfig(result_window, width=canvas_width)
 
-
-def resize_frame(event):
-    canvas.itemconfig("all", width=event.width)
-
-
-canvas.bind("<Configure>", resize_frame)
-
+canvas.bind("<Configure>", center_results)
 canvas.configure(yscrollcommand=scrollbar.set)
 
+canvas.pack(side="left", fill="both", expand=True)
 scrollbar.pack(side="right", fill="y")
-
-canvas.pack(fill="both", expand=True)
-
-
 
 def _on_mousewheel(event):
     canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
 
 canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
