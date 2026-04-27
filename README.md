@@ -38,6 +38,7 @@ After that it took me two hours to write code for artist, song, album, single an
 | 15 | Columns for API | 1 | Converted long scrolling list to 3 columns automatically populated for each api selected |
 | 16 | Added Album Search | 0.15 | Added Album Search entry field to GUI. Also converted repeated code usage to function for efficiency and readability. |
 | 17 | UI Redesign, Theme Redesign | 1 | Removed unique entry for each type and converted to single entry with dropdown menu. Redesigned the entire GUI with dark theme reminiscent of spotify. |
+| 18 | Add Compilation, Single Search to GUI | 1 | Added compilation single search. Tidal defaults to songs due to issue. Fixed formatting errors for ('). |
 
 Malak Chami: 
 | Commit \# | Time | Accomplished |
