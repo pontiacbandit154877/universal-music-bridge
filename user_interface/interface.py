@@ -406,8 +406,10 @@ canvas.bind("<Configure>", resize_frame)
 
 canvas.configure(yscrollcommand=scrollbar.set)
 
-canvas.pack(fill="both", expand=True)
 scrollbar.pack(side="right", fill="y")
+
+canvas.pack(fill="both", expand=True)
+
 
 
 def _on_mousewheel(event):
