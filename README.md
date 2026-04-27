@@ -33,6 +33,8 @@ After that it took me two hours to write code for artist, song, album, single an
 | 10 | Fixed Popularity overriding name Match | 2 | Fixed TIDAL API prioritizing popularity of tracks over exact name matches. Added helper method to clean query and song title for comparison, and made song search method select most popular name match and most popular if no name match exists. |
 | 11 | Modify Main \+ Add Main Test | 1 | Modify main helper method, and create a main test script to ensure functionality across all API’s. |
 | 12 | Tidal API Thumbnails for Song and Albums | 3 | Add helper methods for determining thumbnail using album id. Incorporated into albums automatically, and added functionality so song search determines its parent album and finds thumbnail through that. |
+| 13 | Fix Tidal API Artist Lookup | 1 | Fixed 'include' error not returning artists for artist search |
+| 14 | Added artist thumbnail Func. | 1 | Added helper method to construct thumbnail url using query based on thumbnail ID. Ensured functionality + modified main. |
 
 Malak Chami: 
 | Commit \# | Time | Accomplished |
