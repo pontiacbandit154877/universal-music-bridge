@@ -34,7 +34,7 @@ ENTRY_BG = "#2b2b2b"
 # initialize main application window
 window = tk.Tk()
 window.title("Universal Music Bridge")
-window.geometry("900x800")
+window.geometry("1920x1800")
 
 # main app background
 window.configure(bg=APP_BG)
