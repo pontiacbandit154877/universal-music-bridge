@@ -137,7 +137,6 @@ def tidal_search(query, explicitFilter, countryCode, type):
         print(f"Search Failed: {response.status_code} - {response.text}")
         return []
 
-
 def get_artist_info(item_id, item_type="albums"):
     headers = {
         'accept': 'application/vnd.api+json',
@@ -170,7 +169,6 @@ def get_artist_info(item_id, item_type="albums"):
     print(f"Artist lookup for {item_type} failed.")
     return artist_info
 
-
 def get_album_thumbnail_by_id(album_id):
     headers = {
         'accept': 'application/vnd.api+json',
@@ -196,6 +194,37 @@ def get_album_thumbnail_by_id(album_id):
 
                 if standard_res:
                     return standard_res.get('href')
+
+                return files[0].get('href')
+
+    return None
+
+
+def get_artist_thumbnail_by_id(artist_id):
+    headers = {
+        'accept': 'application/vnd.api+json',
+        "Authorization": f"Bearer {session.access_token}"
+    }
+    params = {'countryCode': 'US', 'include': 'profileArt'}
+    url = f'https://openapi.tidal.com/v2/artists/{artist_id}'
+
+    response = requests.get(url, params=params, headers=headers)
+
+    if response.status_code == 200:
+        res_json = response.json()
+        included = res_json.get("included", [])
+
+        artwork_obj = next((item for item in included if item.get("type") == "artworks"), None)
+
+        if artwork_obj:
+            attr = artwork_obj.get("attributes", {})
+            files = attr.get("files", [])
+
+            if files:
+                target_res = next((f for f in files if f.get('meta', {}).get('width') in [640, 750]), None)
+
+                if target_res:
+                    return target_res.get('href')
 
                 return files[0].get('href')
 
@@ -276,8 +305,6 @@ def tidal_search_album(query):
 
     top_album = max(album_items, key=lambda x: x['attributes'].get('popularity', 0))
 
-    print(json.dumps(top_album, indent=4))
-
     top_album_id = top_album.get('id')
 
     album_thumbnail = get_album_thumbnail_by_id(top_album_id)
@@ -348,7 +375,11 @@ def tidal_search_artist(query):
 
     top_artist = max(results, key=lambda x: x['attributes'].get('popularity', 0))
 
-    cleaned_top_artist = clean_result(top_artist, 'artist')
+    artist_id = top_artist.get('id')
+    thumbnail_url = get_artist_thumbnail_by_id(artist_id)
+
+    cleaned_top_artist = clean_result(top_artist, 'artist', thumbnail_url=thumbnail_url)
+
 
     return cleaned_top_artist
 
