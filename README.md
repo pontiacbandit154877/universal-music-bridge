@@ -33,3 +33,18 @@ After that it took me two hours to write code for artist, song, album, single an
 | 10 | Fixed Popularity overriding name Match | 2 | Fixed TIDAL API prioritizing popularity of tracks over exact name matches. Added helper method to clean query and song title for comparison, and made song search method select most popular name match and most popular if no name match exists. |
 | 11 | Modify Main \+ Add Main Test | 1 | Modify main helper method, and create a main test script to ensure functionality across all API’s. |
 | 12 | Tidal API Thumbnails for Song and Albums | 3 | Add helper methods for determining thumbnail using album id. Incorporated into albums automatically, and added functionality so song search determines its parent album and finds thumbnail through that. |
+
+Malak Chami: 
+| Commit \# | Time | Accomplished |
+| :---- | :---- | :---- |
+| 1 | 2 hours | Created the first Tkinter interface file with the main app window, title, song input, artist input, and placeholder text behavior |
+| 2 | 2 hour | Improved the UI styling and added platform checkboxes/results area so selected APIs could show result cards  |
+| 3 | 1 hour | Connected the YouTube API to the interface and displayed up to 4 clickable YouTube results. |
+| 4 | 4 hours | Connected the interface through main.py so YouTube, Spotify, and Tidal could all be searched from the UI  |
+| 5 | 1 hour | Refactored the UI by adding style dictionaries for labels, buttons, checkboxes, result labels, and result sections to make the code cleaner and easier to update.  |
+| 6 | 0.5 hours | Small cleanup/update to the interface after the style dictionary changes.  |
+| 7 | 1 hour | Fixed the Tidal API artist lookup so it could correctly handle albums/tracks and stop showing “Unknown Artist” when artist data existed.  |
+| 8 | 3 hours | Added album art support using PIL, requests, and BytesIO, displayed thumbnails for results, and made the results section scrollable  |
+| 9 | 1.5 hours |  Updated the API/UI search logic so the user could search using both song name and artist name instead of treating everything like one long title.  |
+| 10 | 1 hour | Added a “Copy Link” button beside results and a function that copies the result link to the user’s clipboard  |
+
