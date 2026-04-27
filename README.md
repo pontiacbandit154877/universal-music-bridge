@@ -35,6 +35,9 @@ After that it took me two hours to write code for artist, song, album, single an
 | 12 | Tidal API Thumbnails for Song and Albums | 3 | Add helper methods for determining thumbnail using album id. Incorporated into albums automatically, and added functionality so song search determines its parent album and finds thumbnail through that. |
 | 13 | Fix Tidal API Artist Lookup | 1 | Fixed 'include' error not returning artists for artist search |
 | 14 | Added artist thumbnail Func. | 1 | Added helper method to construct thumbnail url using query based on thumbnail ID. Ensured functionality + modified main. |
+| 15 | Columns for API | 1 | Converted long scrolling list to 3 columns automatically populated for each api selected |
+| 16 | Added Album Search | 0.15 | Added Album Search entry field to GUI. Also converted repeated code usage to function for efficiency and readability. |
+| 17 | UI Redesign, Theme Redesign | 1 | Removed unique entry for each type and converted to single entry with dropdown menu. Redesigned the entire GUI with dark theme reminiscent of spotify. |
 
 Malak Chami: 
 | Commit \# | Time | Accomplished |
