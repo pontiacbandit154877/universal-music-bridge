@@ -118,7 +118,7 @@ def tidal_search(query, explicitFilter, countryCode, type):
         case "tracks":
             params['include'] = ['tracks', 'artists', 'albums', 'genres', 'coverArt', 'albumStatistics']
         case "artists":
-            params['include'] = ['albums', 'followers', 'profileArt']
+            params['include'] = ['artists', 'followers', 'profileArt']
 
     response = requests.get(
         f'https://openapi.tidal.com/v2/searchResults/{query_formatted}',
