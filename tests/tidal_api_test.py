@@ -6,7 +6,7 @@ top_album = tidal_api(category="albums", query="I LAY DOWN MY LIFE FOR YOU")
 
 top_song = tidal_api(category="songs", query="loop it and leave it")
 top_artist = tidal_api(category="artists", query="JPEGMAFIA")
-top_compilation = tidal_api(category="compilations", query="We Live in a Society")
+top_compilation = tidal_api(category="compilations", query="Billy Joel")
 
 print("Printing Albums...")
 

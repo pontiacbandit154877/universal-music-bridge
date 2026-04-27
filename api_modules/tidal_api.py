@@ -404,7 +404,7 @@ def tidal_search_compilation(query):
 
     if not valid_eps:
         print(f"No EPs found for '{query}'.")
-        return [], None
+        return None
 
     top_ep = max(valid_eps, key=lambda x: x['attributes'].get('popularity', 0), default=None)
 
@@ -412,6 +412,6 @@ def tidal_search_compilation(query):
     artist_info = get_artist_info(top_ep_id)
     ep_thumbnail = get_album_thumbnail_by_id(top_ep_id)
 
-    cleaned_top_ep = clean_result(top_ep, 'compilation', artist_info, ep_thumbnail)
+    cleaned_top_ep = clean_result(top_ep, 'compilation', artist_info=artist_info, thumbnail_url=ep_thumbnail)
 
     return cleaned_top_ep

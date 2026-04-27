@@ -326,6 +326,7 @@ def search():
         if tidal_results and tidal_results[0]:
             # Normalize Tidal data (handling list vs single dict)
             res_list = tidal_results[0] if isinstance(tidal_results[0], list) else [tidal_results[0]]
+
             for result in res_list[:4]:
                 if result.get("thumbnail"):
                     # Use your fixed URL logic here
